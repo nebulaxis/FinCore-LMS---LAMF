@@ -1,0 +1,196 @@
+You are a senior full-stack fintech engineer.
+Build a clean, interview-ready, demo-level Loan Management System (LMS) for an NBFC providing Loan Against Mutual Funds (LAMF).
+
+This is NOT a production system, but it must demonstrate clear system design, API-first architecture, and correct loan lifecycle understanding.
+
+🔧 TECH STACK (MANDATORY)
+
+Frontend: React (Vite or CRA)
+
+Backend: Node.js + Express
+
+Database: MongoDB (Mongoose)
+
+API style: REST, JSON
+
+Auth: Skip or keep minimal (single admin assumption)
+
+🎯 CORE BUSINESS SCOPE (VERY IMPORTANT)
+
+This NBFC only provides Loan Against Mutual Funds (LAMF).
+Mutual Funds act as collateral.
+
+🧩 MODULES TO IMPLEMENT (EXACTLY THESE 5)
+1️⃣ Loan Products
+
+Create and list loan products
+
+Fields:
+
+name
+
+interestRate
+
+maxLtv
+
+minAmount
+
+maxAmount
+
+tenureMonths
+
+2️⃣ Loan Applications
+
+Create loan applications
+
+Status flow:
+
+DRAFT → SUBMITTED → APPROVED → DISBURSED → CLOSED
+
+Store applicant name, product, requested amount
+
+3️⃣ Create New Loan Application (API-FIRST)
+
+REST API to create loan application
+
+Designed so external fintech companies can use it
+
+Validate loan amount vs product limits
+
+4️⃣ Ongoing Loans
+
+Convert approved application into an active loan
+
+Track:
+
+sanctioned amount
+
+outstanding amount
+
+loan status (ACTIVE / CLOSED)
+
+5️⃣ Collateral Management (Mutual Funds)
+
+Track pledged mutual fund units per loan
+
+Fields:
+
+fundName
+
+isin
+
+units
+
+nav (dummy/static)
+
+pledgedValue
+
+Linked to a loan
+
+🧠 SYSTEM DESIGN GUIDELINES
+
+Use modular backend structure:
+
+models
+
+controllers
+
+routes
+
+services (business logic)
+
+Keep business logic out of controllers
+
+Use clean REST endpoints
+
+No unnecessary features (no accounting, no compliance engine)
+
+📊 DASHBOARD REQUIREMENTS (BASIC)
+
+Create a simple dashboard API that returns:
+
+total loan applications
+
+active loans count
+
+total disbursed amount
+
+total collateral value
+
+Frontend can show simple cards (no heavy charts required).
+
+📁 PROJECT STRUCTURE
+/backend
+  /models
+  /controllers
+  /routes
+  /services
+  app.js
+
+/frontend
+  /components
+  /pages
+  /services (API calls)
+
+📘 README.md (MANDATORY – VERY IMPORTANT)
+
+Create a clear and professional README.md including:
+
+1. Project Overview
+
+Explain:
+
+What is LMS
+
+What is LAMF
+
+What this demo covers
+
+2. Tech Stack Used
+3. System Design & Assumptions
+
+Include statements like:
+
+Single NBFC admin user
+
+Dummy NAV values
+
+MongoDB used for demo scope
+
+4. API Endpoints
+
+Document all APIs with:
+
+endpoint
+
+method
+
+request body
+
+example response
+
+5. Setup & Run Instructions
+
+Step-by-step instructions to run locally.
+
+⚠️ IMPORTANT RULES
+
+Keep the code simple, readable, and interview-friendly
+
+Do NOT over-engineer
+
+Add comments where business logic is implemented
+
+Focus on clarity over completeness
+
+✅ FINAL GOAL
+
+Deliver a fully working demo LMS that clearly demonstrates:
+
+Loan lifecycle understanding
+
+API-first design
+
+Backend engineering maturity
+
+Clear documentation
