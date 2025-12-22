@@ -9,11 +9,12 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
-    alias: {
-      "@": path.resolve(process.cwd(), "client/src"),
-      "@shared": path.resolve(process.cwd(), "shared"),
-      "@assets": path.resolve(process.cwd(), "attached_assets"),
-    },
+     alias: {
+    "@": path.resolve(process.cwd(), "client/src"),
+    "@shared": path.resolve(process.cwd(), "shared"),
+    "@assets": path.resolve(process.cwd(), "attached_assets"),
+    "~": path.resolve(process.cwd(), "node_modules") // <--- add this
+  },
   },
   css: {
     postcss: {
