@@ -1,9 +1,10 @@
 // server/index.ts
 import { config } from "dotenv";
-config(); // load .env first
+config();
 
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
+import cors from "cors";
 
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
@@ -11,6 +12,14 @@ import { env } from "./config/env";
 
 const app = express();
 const httpServer = createServer(app);
+
+// ✅ CORS (local + render)
+app.use(
+  cors({
+    origin: true,        // allow same-origin & localhost
+    credentials: true,
+  })
+);
 
 /**
  * Extend IncomingMessage to store rawBody
@@ -48,7 +57,7 @@ export function log(message: string, source = "express") {
 }
 
 /**
- * API request logger middleware
+ * API request logger
  */
 app.use((req, res, next) => {
   const start = Date.now();
@@ -66,13 +75,7 @@ app.use((req, res, next) => {
     if (!path.startsWith("/api")) return;
 
     const duration = Date.now() - start;
-    let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-
-    if (capturedJsonResponse) {
-      logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-    }
-
-    log(logLine);
+    log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
   });
 
   next();
@@ -83,23 +86,14 @@ app.use((req, res, next) => {
  */
 async function startServer() {
   try {
-    // Register API routes
     await registerRoutes(httpServer, app);
 
-    /**
-     * Global error handler (LAST middleware)
-     */
+    // Global error handler
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      log(message, "error");
-      res.status(status).json({ message });
+      log(err.message || "Internal Server Error", "error");
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    /**
-     * Frontend handling
-     */
     if (env.NODE_ENV === "production") {
       serveStatic(app);
     } else {
@@ -107,16 +101,12 @@ async function startServer() {
       await setupVite(httpServer, app);
     }
 
-    /**
-     * 🚀 Start server (Render compatible)
-     */
     const PORT = Number(process.env.PORT) || 5000;
-
     httpServer.listen(PORT, "0.0.0.0", () => {
       log(`🚀 Server running on port ${PORT}`);
     });
-  } catch (error) {
-    console.error("🔥 Server failed to start", error);
+  } catch (err) {
+    console.error("🔥 Server failed to start", err);
     process.exit(1);
   }
 }
