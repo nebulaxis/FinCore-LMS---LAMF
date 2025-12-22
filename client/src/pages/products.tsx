@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, LoanProduct } from "@/lib/mock-api";
+import { api, LoanProduct } from "@/lib/api";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+
+
 
 const productSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
