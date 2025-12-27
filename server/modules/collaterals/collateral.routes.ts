@@ -14,7 +14,6 @@ router.get("/", async (_req, res) => {
     const data = await getCollaterals();
     res.json(data);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Failed to fetch collaterals" });
   }
 });
@@ -24,7 +23,7 @@ router.post("/", async (req, res) => {
   try {
     const { fundName, isin, units, nav, loanId } = req.body;
 
-    if (!fundName || !isin || !units || !nav || !loanId) {
+    if (!fundName || !isin || units == null || nav == null || !loanId) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
@@ -45,43 +44,29 @@ router.post("/", async (req, res) => {
 
 /* ================= DELETE ================= */
 router.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+  const deleted = await deleteCollateral(req.params.id);
 
-    const deleted = await deleteCollateral(id);
-
-    // ✅ FIX HERE
-    if (!deleted) {
-      return res.status(404).json({ message: "Collateral not found" });
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DELETE COLLATERAL ERROR", err);
-    res.status(500).json({ message: "Failed to delete collateral" });
+  if (!deleted) {
+    return res.status(404).json({ message: "Collateral not found" });
   }
+
+  res.json({ success: true });
 });
 
 /* ================= UPDATE ================= */
 router.patch("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { units, nav } = req.body;
+  const { units, nav } = req.body;
 
-    if (!units || !nav) {
-      return res.status(400).json({ message: "Units and NAV required" });
-    }
-
-    const updated = await updateCollateral(id, {
-      units: Number(units),
-      nav: Number(nav),
-    });
-
-    res.json(updated);
-  } catch (err) {
-    console.error("UPDATE COLLATERAL ERROR", err);
-    res.status(500).json({ message: "Failed to update collateral" });
+  if (units == null || nav == null) {
+    return res.status(400).json({ message: "Units and NAV required" });
   }
+
+  const updated = await updateCollateral(req.params.id, {
+    units: Number(units),
+    nav: Number(nav),
+  });
+
+  res.json(updated);
 });
 
 export default router;
