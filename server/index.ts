@@ -6,33 +6,35 @@ import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import cors from "cors";
 
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes";   // 👈 IMPORTANT
 import { serveStatic } from "./static";
 import { env } from "./config/env";
 
 const app = express();
 const httpServer = createServer(app);
 
-// ✅ CORS (local + render)
+// ======================
+// CORS
+// ======================
 app.use(
   cors({
-    origin: true,        // allow same-origin & localhost
+    origin: true,
     credentials: true,
   })
 );
 
-/**
- * Extend IncomingMessage to store rawBody
- */
+// ======================
+// Extend IncomingMessage
+// ======================
 declare module "http" {
   interface IncomingMessage {
     rawBody?: Buffer;
   }
 }
 
-/**
- * Body parsers
- */
+// ======================
+// Body Parsers
+// ======================
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -43,9 +45,9 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-/**
- * Logger utility
- */
+// ======================
+// Logger helper
+// ======================
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -56,24 +58,20 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-/**
- * API request logger
- */
+// ======================
+// API Request Logger
+// ======================
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
 
-  let capturedJsonResponse: any;
-
-  const originalResJson = res.json.bind(res);
+  const originalJson = res.json.bind(res);
   res.json = (body: any) => {
-    capturedJsonResponse = body;
-    return originalResJson(body);
+    return originalJson(body);
   };
 
   res.on("finish", () => {
     if (!path.startsWith("/api")) return;
-
     const duration = Date.now() - start;
     log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
   });
@@ -81,19 +79,23 @@ app.use((req, res, next) => {
   next();
 });
 
-/**
- * Bootstrap server
- */
+// ======================
+// START SERVER
+// ======================
 async function startServer() {
   try {
+    // 🔑 REGISTER ALL ROUTES HERE
     await registerRoutes(httpServer, app);
 
     // Global error handler
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       log(err.message || "Internal Server Error", "error");
-      res.status(err.status || 500).json({ message: err.message });
+      res.status(err.status || 500).json({
+        message: err.message || "Internal Server Error",
+      });
     });
 
+    // Vite / Static
     if (env.NODE_ENV === "production") {
       serveStatic(app);
     } else {

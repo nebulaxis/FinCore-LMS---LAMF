@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, AlertCircle } from "lucide-react";
 
+
 export default function Loans() {
   const { data: loans, isLoading } = useQuery({
     queryKey: ['loans'],
@@ -46,7 +47,12 @@ export default function Loans() {
                   </TableCell>
                 </TableRow>
               ) : (
-                loans?.map((loan) => {
+                loans
+  ?.filter((loan) =>
+    String(loan.status) === "ACTIVE" ||
+    String(loan.status) === "DISBURSED"
+  )
+  .map((loan) => {
                   const progress = ((loan.sanctionedAmount - loan.outstandingAmount) / loan.sanctionedAmount) * 100;
                   return (
                     <TableRow key={loan.id}>

@@ -49,6 +49,20 @@ export default function Products() {
     },
   });
 
+
+const deleteMutation = useMutation({
+  mutationFn: (id: string) => api.deleteProduct(id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    toast({
+      title: "Deleted",
+      description: "Product successfully deleted",
+    });
+  },
+});
+
+
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -171,6 +185,15 @@ export default function Products() {
                    <span className="text-xs font-medium text-muted-foreground">Active Product</span>
                    <Button variant="ghost" size="sm" className="h-8">Details</Button>
                 </CardFooter>
+
+                <Button
+      variant="destructive"
+      size="sm"
+      onClick={() => deleteMutation.mutate(product.id)}
+    >
+      Delete
+    </Button>
+
               </Card>
             ))
           )}

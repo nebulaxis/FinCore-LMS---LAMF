@@ -2,6 +2,10 @@
 // TYPES (same as mock-api.ts to avoid frontend break)
 // =======================================================
 
+import { Collateral, AddCollateralPayload } from "@/types/collateral.types";
+
+
+
 export type LoanProduct = {
   id: string;
   name: string;
@@ -29,14 +33,19 @@ export type LoanApplication = {
   updatedAt?: string;
 };
 
+export type DisbursementTrend = {
+  name: string;   // Jan, Feb
+  total: number; // amount
+};
+
 export type ActiveLoan = {
   id: string;
   applicationId: string;
   sanctionedAmount: number;
   outstandingAmount: number;
-  status: "ACTIVE" | "CLOSED";
-  startDate: string;
-  nextEmiDate: string;
+  status: "ACTIVE" | "CLOSED"; // frontend expects ACTIVE/CLOSED
+  startDate: string;           // ISO string
+  nextEmiDate: string;         // ISO string
 };
 
 export type MutualFundCollateral = {
@@ -50,20 +59,20 @@ export type MutualFundCollateral = {
 };
 
 export type DashboardStats = {
-  totalLoans: number;
+  totalApplications: number;
+  activeLoans: number;
   totalDisbursed: number;
-  collateralValue: number;
+  totalCollateral: number;
+  riskPercent: number;
 };
 
 // =======================================================
 // BASE FETCH HELPER
 // =======================================================
 
-//const API_BASE = "/api/v1";
-
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
-
+const API_BASE = import.meta.env.DEV
+  ? "http://localhost:5000/api/v1" // dev server
+  : "/api/v1"; 
 
 async function apiFetch<T>(
   url: string,
@@ -104,10 +113,27 @@ export const api = {
     });
   },
 
+
+  deleteProduct: (id: string): Promise<{ success: boolean }> => {
+  return apiFetch(`/products/${id}`, {
+    method: "DELETE",
+  });
+},
+
+updateProduct: (id: string, data: Partial<LoanProduct>) => {
+  return apiFetch(`/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+},
+
+
+
   // ------------------ APPLICATIONS ------------------
   getApplications: (): Promise<LoanApplication[]> => {
     return apiFetch("/applications");
   },
+
 
   createApplication: (
     data: Omit<
@@ -121,28 +147,83 @@ export const api = {
     });
   },
 
-  updateApplicationStatus: (
-    id: string,
-    status: LoanApplicationStatus
-  ): Promise<LoanApplication> => {
-    return apiFetch(`/applications/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    });
-  },
 
-  // ------------------ LOANS ------------------
-  getLoans: (): Promise<ActiveLoan[]> => {
-    return apiFetch("/loans");
-  },
+  deleteApplication: (id: string) => {
+  return apiFetch(`/applications/${id}`, {
+    method: "DELETE",
+  });
+},
 
-  // ------------------ COLLATERALS ------------------
-  getCollateral: (): Promise<MutualFundCollateral[]> => {
-    return apiFetch("/collaterals");
-  },
+updateApplication: (id: string, data: Partial<LoanApplication>) => {
+  return apiFetch(`/applications/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+},
 
-  // ------------------ DASHBOARD ------------------
-  getDashboardStats: (): Promise<DashboardStats> => {
-    return apiFetch("/dashboard");
-  },
-};
+
+
+updateApplicationStatus: (id: string, status: LoanApplicationStatus) =>
+  apiFetch(`/applications/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  }),
+
+
+
+
+// ------------------ LOANS ------------------
+// ------------------ LOANS ------------------
+getLoans: (): Promise<ActiveLoan[]> => {
+  return apiFetch("/loans");
+},
+
+disburseLoan: (applicationId: string) => {
+  return apiFetch(`/loans/disburse/${applicationId}`, {
+    method: "POST",
+  });
+},
+
+repayLoan: (id: string, amount: number) => {
+  return apiFetch(`/loans/${id}/repay`, {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+},
+
+
+// ------------------ COLLATERALS ------------------
+// ------------------ COLLATERALS ------------------
+getCollateral: (): Promise<MutualFundCollateral[]> => {
+  return apiFetch("/collaterals");
+},
+
+addCollateral: (payload: AddCollateralPayload): Promise<MutualFundCollateral> => {
+  return apiFetch("/collaterals", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+},
+
+deleteCollateral: (id: string) => {
+  return apiFetch(`/collaterals/${id}`, {
+    method: "DELETE",
+  });
+},
+
+
+// ------------------ DASHBOARD ------------------
+getDashboardStats: async (): Promise<{
+  totalApplications: number;
+  activeLoans: number;
+  totalDisbursed: number;
+  totalCollateral: number;
+  riskPercent: number; 
+}> => {
+  return apiFetch("/dashboard"); // backend route returns stats + riskPercent
+},
+
+getDisbursementTrends: (): Promise<DisbursementTrend[]> => {
+  return apiFetch("/dashboard/disbursement-trends");
+},
+}
