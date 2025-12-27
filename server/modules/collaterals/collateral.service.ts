@@ -24,32 +24,21 @@ export async function addCollateral(data: {
 }) {
   const pledgedValue = data.units * data.nav;
 
-  const payload: InsertCollateral = {
-    loanId: data.loanId,
-    fundName: data.fundName,
-    isin: data.isin,
-
-    units: String(data.units),
-    nav: String(data.nav),
-    pledgedValue: String(pledgedValue),
-  };
-
   const [created] = await db
     .insert(collaterals)
-    .values(payload)   // ✅ SINGLE OBJECT
+    .values({
+      loanId: data.loanId,
+      fundName: data.fundName,
+      isin: data.isin,
+      units: data.units,        
+      nav: data.nav,              
+      pledgedValue,               
+    })
     .returning();
 
-  if (!created) {
-    throw new Error("Collateral insert failed");
-  }
-
-  return {
-    ...created,
-    units: Number(created.units),
-    nav: Number(created.nav),
-    pledgedValue: Number(created.pledgedValue),
-  };
+  return created;
 }
+
 
 /* ================= GET BY LOAN ================= */
 export async function getCollateralsByLoan(loanId: string) {
