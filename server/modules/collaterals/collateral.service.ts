@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { collaterals } from "@shared/schema";
+import { collaterals, InsertCollateral } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 /* ================= GET ALL ================= */
@@ -22,18 +22,21 @@ export async function addCollateral(data: {
   units: number;
   nav: number;
 }) {
-  const pledgedValue = (data.units * data.nav).toFixed(2);
+  const pledgedValue = data.units * data.nav;
+
+  const payload: InsertCollateral = {
+    loanId: data.loanId,
+    fundName: data.fundName,
+    isin: data.isin,
+
+    units: String(data.units),
+    nav: String(data.nav),
+    pledgedValue: String(pledgedValue),
+  };
 
   const [created] = await db
     .insert(collaterals)
-    .values({
-      fundName: data.fundName,
-      isin: data.isin,
-      units: data.units.toString(),
-      nav: data.nav.toString(),
-      pledgedValue,
-      loanId: data.loanId,
-    })
+    .values(payload)   // ✅ SINGLE OBJECT
     .returning();
 
   if (!created) {
@@ -70,7 +73,6 @@ export async function deleteCollateral(id: string) {
     .where(eq(collaterals.id, id))
     .returning();
 
-  // ✅ returns single object | undefined
   return deleted;
 }
 
@@ -79,14 +81,14 @@ export async function updateCollateral(
   id: string,
   updates: { units: number; nav: number }
 ) {
-  const pledgedValue = (updates.units * updates.nav).toFixed(2);
+  const pledgedValue = updates.units * updates.nav;
 
   const [updated] = await db
     .update(collaterals)
     .set({
-      units: updates.units.toString(),
-      nav: updates.nav.toString(),
-      pledgedValue,
+      units: String(updates.units),
+      nav: String(updates.nav),
+      pledgedValue: String(pledgedValue),
     })
     .where(eq(collaterals.id, id))
     .returning();
