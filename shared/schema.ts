@@ -6,12 +6,15 @@ import {
   integer,
   timestamp,
   numeric,
+  uuid
 } from "drizzle-orm/pg-core";
 
 import {
   InferSelectModel,
   InferInsertModel,
 } from "drizzle-orm";
+
+
 
 /* ================= USERS ================= */
 
@@ -54,16 +57,18 @@ export const loanApplications = pgTable("loan_applications", {
 
   applicantName: text("applicant_name").notNull(),
   productId: varchar("product_id", { length: 36 }).notNull(),
-
   requestedAmount: integer("requested_amount").notNull(),
-
   status: text("status").notNull(), // DRAFT | SUBMITTED | APPROVED | REJECTED
-
   approvedAt: timestamp("approved_at"),
   approvedBy: text("approved_by"),
-
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+
+  // ✅ Nullable collateral info
+  pledgedFundName: text("pledged_fund_name"), // nullable by default
+  pledgedISIN: text("pledged_isin"),         // nullable
+  pledgedUnits: integer("pledged_units"),    // nullable
+  pledgedNAV: integer("pledged_nav"),        // nullable
 });
 
 export type LoanApplication = InferSelectModel<typeof loanApplications>;
@@ -85,6 +90,9 @@ export const loans = pgTable("loans", {
   status: text("status").notNull(), // DISBURSED | CLOSED
   riskStatus: text("risk_status").default("NORMAL"),
 
+  startDate: timestamp("start_date").notNull(),
+  nextEmiDate: timestamp("next_emi_date").notNull(),
+
   disbursedAt: timestamp("disbursed_at"),
   closedAt: timestamp("closed_at"),
   closureReason: text("closure_reason"),
@@ -92,26 +100,43 @@ export const loans = pgTable("loans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+
+export const emis = pgTable("emis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  loanId: varchar("loan_id").notNull(),
+
+  dueDate: timestamp("due_date").notNull(),
+  amount: integer("amount").notNull(),
+
+  status: text("status")
+    .default("PENDING"), // PENDING | PAID | OVERDUE
+
+  paidAt: timestamp("paid_at"),
+});
+
+
+
 export type Loan = InferSelectModel<typeof loans>;
 export type InsertLoan = InferInsertModel<typeof loans>;
 
 /* ================= COLLATERALS ================= */
 
 export const collaterals = pgTable("collaterals", {
-  id: varchar("id", { length: 36 })
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
+  id: uuid("id").defaultRandom().primaryKey(),
 
   fundName: text("fund_name").notNull(),
   isin: text("isin").notNull(),
 
-  units: integer("units").notNull(),
-  nav: integer("nav").notNull(),
-  pledgedValue: integer("pledged_value").notNull(),
+  units: text("units").notNull(),          // TEXT
+  nav: text("nav").notNull(),              // TEXT
+  pledgedValue: text("pledged_value").notNull(),
 
-  loanId: varchar("loan_id", { length: 36 }).notNull(),
+  loanId: uuid("loan_id")
+    .references(() => loans.id)
+    .notNull(),
 });
 
 export type Collateral = InferSelectModel<typeof collaterals>;
-export type InsertCollateral =
-  InferInsertModel<typeof collaterals>;
+export type InsertCollateral = InferInsertModel<typeof collaterals>;
+
