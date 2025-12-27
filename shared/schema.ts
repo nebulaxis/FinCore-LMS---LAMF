@@ -128,14 +128,17 @@ export const collaterals = pgTable("collaterals", {
   fundName: text("fund_name").notNull(),
   isin: text("isin").notNull(),
 
-  units: text("units").notNull(),          // TEXT
-  nav: text("nav").notNull(),              // TEXT
-  pledgedValue: text("pledged_value").notNull(),
+  units: integer("units").notNull(),          // ✅ INTEGER
+  nav: numeric("nav").notNull(),              // ✅ DECIMAL
+  pledgedValue: numeric("pledged_value").notNull(), // ✅ DECIMAL
 
   loanId: uuid("loan_id")
     .references(() => loans.id)
     .notNull(),
+
+  createdAt: timestamp("created_at").defaultNow(),
 });
+;
 
 export type Collateral = InferSelectModel<typeof collaterals>;
 export type InsertCollateral = InferInsertModel<typeof collaterals>;
